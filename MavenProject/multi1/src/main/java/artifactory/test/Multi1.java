@@ -1,5 +1,5 @@
 package artifactory.test;
-Checckin
+
 /**
  This is check
  */
