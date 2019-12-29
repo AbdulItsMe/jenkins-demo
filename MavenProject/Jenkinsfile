@@ -33,7 +33,7 @@ pipeline {
             steps {
                 script {
                     echo "deployment"
-                          copyArtifacts fingerprintArtifacts: true, projectName: 'Module 10', selector: lastSuccessful(), target: '/MavenProject'
+                          copyArtifacts fingerprintArtifacts: true, projectName: 'Module 10', selector: lastSuccessful(), target: '/var/lib/jenkins/tomcat'
                 }
             }
         }
