@@ -28,6 +28,31 @@ pipeline {
             }
             
         }
+        
+        
+        stage("Metrics"){
+            steps{
+            parallel ( "Cobertura Report":   
+            {
+              node('slave'){
+                git 'https://github.com/AbdulItsMe/jenkins-demo.git'
+                sh "cd MavenProject ; mvn test cobertura:cobertura -Pmetrics ; pwd"
+                cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'MavenProject/multi1/target/site/cobertura/coverage.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
+                  }
+            },
+            "FindBugs Report" : {
+            node('slave'){
+                sh "mkdir javancss1 ; cd javancss1 ;pwd"
+                git 'https://github.com/AbdulItsMe/jenkins-demo.git'
+                sh "cd MavenProject ; mvn findbugs:findbugs ; pwd"
+                findbugs canComputeNew: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', isRankActivated: true, pattern: 'MavenProject/multi1/target/findbugsXml.xml', unHealthy: ''    
+                deleteDir()
+                }
+
+              }
+            )
+            }
+        }
         stage('Deployment') {
             // Deployment
             steps {
@@ -35,6 +60,12 @@ pipeline {
                     echo "deployment"
                           copyArtifacts fingerprintArtifacts: true, projectName: 'Module 10', selector: lastSuccessful(), target: '/var/lib/jenkins/tomcat'
                 }
+            }
+        }
+        
+        stage('Email') {
+        steps {
+            emailext body: '$DEFAULT_CONTENT', subject: '$DEFAULT_SUBJECT', to: '$receipent'
             }
         }
         stage('publish html report') {
@@ -49,32 +80,5 @@ pipeline {
                 cleanWs()
             }
         }
-        stage("Metrics"){
-            steps{
-            parallel ( "JavaNcss Report":   
-            {
-              node('slave'){
-                git 'https://github.com/AbdulItsMe/jenkins-demo.git'
-                sh "cd javancss-master ; mvn test javancss:report ; pwd"
-                  }
-            },
-            "FindBugs Report" : {
-            node('slave'){
-                sh "mkdir javancss1 ; cd javancss1 ;pwd"
-                git 'https://github.com/AbdulItsMe/jenkins-demo.git'
-                sh "cd javancss-master ; mvn findbugs:findbugs ; pwd"
-                deleteDir()
-                }
-
-              }
-         )
-            }
-         post{
-                success {
-                    emailext body: 'Successfully completed pipeline project with archiving the artifacts', subject: 'Pipeline was successfull', to: 'a.abdulrahman41@gmail.com'
-                }
-    }
-}
-        
     }
 }
